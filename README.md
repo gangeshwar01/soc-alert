@@ -1,10 +1,8 @@
-# ✅ **README.md (Tailored to Your Project)**
-
 ```markdown
-# 🔥 RealTime Alert Analysis (UNSW-NB15)
+# 🔥 RealTime Alert Analysis (CICIDS2018)
 
-A complete machine learning pipeline for **real-time security alert classification** using the **UNSW-NB15 dataset**.  
-This project includes training scripts, preprocessing, model generation, evaluation reports, and a Streamlit dashboard for real-time prediction and visualization.
+A complete machine learning pipeline for **real-time intrusion detection** using the **CICIDS2018 dataset**.  
+This project supports RAM-efficient training, preprocessing, model generation, anomaly detection, evaluation reports (PNG), and a Streamlit-based dashboard for real-time security alert analysis.
 
 ---
 
@@ -15,87 +13,101 @@ This project includes training scripts, preprocessing, model generation, evaluat
 REALTIME_ALERT_ANALYSIS/
 │
 ├── dataset/
-│   ├── UNSW_NB15_training-set.csv
-│   └── UNSW_NB15_testing-set.csv
+│   └── 02-16-2018.csv                    # CICIDS2018 part file(s)
+│
+├── model/
+│   ├── cicids2018_features_A.joblib      # Saved feature list
+│   ├── cicids2018_rf_model_A.joblib      # Trained RandomForest model
+│   └── cicids2018_scaler_A.joblib        # Scaler used during training
 │
 ├── notebook/
-│   └── train.ipynb                        # Jupyter notebook (exploration/training)
+│   └── train.ipynb                       # Exploratory training/testing notebook
 │
 ├── report/
 │   ├── test_report/
-│   │   └── unsw_report.pdf                # PDF report
+│   │   └── unsw_report.pdf               # Example reference report
 │   │
 │   └── training_report/
-│       ├── realistic_self_scaled_network_dataset.csv
-│       ├── Training_Accuracy.png
-│       ├── UNSW_NB15_testing-set.parquet
-│       ├── UNSW_NB15_training-set.parquet
-│       ├── unsw15_model_v1.joblib         # ML Model (Git LFS)
-│       └── unsw15_scaler_v1.joblib        # Scaler (Git LFS)
+│       └── classification_report.png     # Auto-generated classification report
 │
 ├── scripts/
-│   ├── dashboard.py                        # Streamlit dashboard
-│   └── train.py                            # Model training script
+│   ├── dashboard.py                      # Streamlit dashboard for live predictions
+│   └── train.py                          # RAM-efficient training script (CICIDS2018)
 │
-├── unsw_predictions.csv                    # Sample prediction output
+├── venv/                                 # Virtual environment
 │
 ├── requirements.txt
-├── LICENSE
-├── .gitignore
 ├── .gitattributes
+├── .gitignore
+├── LICENSE
 └── README.md
 
-````
+```
 
 ---
 
 ## 🚀 Features
 
-### **✔ Complete ML Pipeline**
-- Preprocessing (scaling, encoding, cleaning)
-- Train/test split with UNSW-NB15 dataset
-- ML model training using `RandomForest` (or your chosen model)
-- Scaler saved for reproducibility
+### **✔ RAM-Efficient ML Training**
+Your training script (`scripts/train.py`) includes:
 
-### **✔ Real-Time Predictions**
-Run predictions using:
-- Saved model (`unsw15_model_v1.joblib`)
-- Saved scaler (`unsw15_scaler_v1.joblib`)
+- Stream-based CSV loading (chunked processing)
+- Automatic numeric column detection
+- Automatic label column detection
+- Balanced dataset sampling per class
+- Scaling → RandomForest training
+- Isolation Forest anomaly detector
+- Model bundle saved using `joblib`
+- Classification report saved as **PNG**
+
+### **✔ Auto-Generated Image Reports**
+Training automatically produces:
+
+- `classification_report.png`  
+  Stored under:  
+```
+
+report/training_report/classification_report.png
+
+````
 
 ### **✔ Streamlit Dashboard**
-Interactive dashboard that shows:
-- Live threat predictions  
-- Risk scores  
-- Performance metrics  
-- Input forms for manual testing  
+The dashboard (`scripts/dashboard.py`) provides:
 
-### **✔ Ready-to-Use Datasets**
-Contains:
-- CSV files (original)
-- Parquet files (optimized for speed)
+- Real-time intrusion prediction
+- Probability/Risk scores
+- Feature visualizations
+- JSON / Manual input support
 
-### **✔ Full Training Report**
-Stored under `report/training_report/`:
-- Accuracy chart  
-- Model + scaler files  
-- Metrics dataset  
+### **✔ Model Bundle Files**
+Saved inside `model/`:
+
+- `cicids2018_rf_model_A.joblib`
+- `cicids2018_scaler_A.joblib`
+- `cicids2018_features_A.joblib`
+
+### **✔ Clean Project & Reproducibility**
+- Git LFS ready for `.joblib` files  
+- Reproducible experiments  
+- Organized folder structure  
 
 ---
 
 ## 🧰 Tech Stack
 
-| Purpose | Technology |
-|--------|------------|
-| Model Training | Python, Scikit-Learn |
-| Dashboard | Streamlit |
-| Data Handling | Pandas, NumPy |
-| Visualization | Matplotlib |
-| Storage | Git LFS (for `.joblib`) |
-| Environment | venv |
+| Purpose        | Technology |
+|----------------|------------|
+| ML Training    | Python, Scikit-Learn |
+| Feature Scaling | StandardScaler |
+| Dashboard      | Streamlit |
+| Plotting       | Matplotlib |
+| Data Handling  | Pandas, NumPy |
+| File Storage   | Git LFS |
+| Environment    | venv |
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Setup & Installation
 
 ### **1. Clone the Repository**
 ```bash
@@ -103,12 +115,12 @@ git clone https://github.com/yourusername/RealTime_Alert_Analysis.git
 cd RealTime_Alert_Analysis
 ````
 
-### **2. Create & Activate Virtual Environment**
+### **2. Create Virtual Environment**
 
 ```bash
 python -m venv venv
-source venv/bin/activate     # Linux/Mac
 venv\Scripts\activate        # Windows
+source venv/bin/activate     # Linux/Mac
 ```
 
 ### **3. Install Dependencies**
@@ -117,9 +129,7 @@ venv\Scripts\activate        # Windows
 pip install -r requirements.txt
 ```
 
-### **4. Install Git LFS**
-
-Models (`*.joblib`) are large, so Git Large File Storage is required:
+### **4. Install Git LFS (Required for .joblib Models)**
 
 ```bash
 git lfs install
@@ -128,58 +138,62 @@ git lfs pull
 
 ---
 
-## 🧠 Model Training
+## 🧠 Training the Model
 
-Run training script:
+Run training:
 
 ```bash
 python scripts/train.py
 ```
 
-This will:
+This script will:
 
-* Load UNSW-NB15 training dataset
-* Train the model
-* Save:
+✔ Load CICIDS2018 CSVs
+✔ Stream & balance data
+✔ Train RandomForest
+✔ Train Isolation Forest
+✔ Save model bundle
+✔ Generate PNG classification report
 
-  * `unsw15_model_v1.joblib`
-  * `unsw15_scaler_v1.joblib`
-* Generate updated accuracy reports
-
-Output gets stored in:
+All saved output is stored here:
 
 ```
+model/
 report/training_report/
 ```
 
 ---
 
-## ▶️ Running the Dashboard
+## ▶️ Run the Streamlit Dashboard
 
 ```bash
 streamlit run scripts/dashboard.py
 ```
 
-Then open the displayed local URL in your browser.
+Open the URL displayed in your terminal, typically:
 
-The dashboard includes:
+```
+http://localhost:8501
+```
 
-* Threat classification
-* Probability scores
-* Visualization charts
-* Input form to test custom feature vectors
+The dashboard provides:
+
+* Real-time attack classification
+* Interactive UI
+* Probability visualizations
+* JSON/Row-level input
 
 ---
 
-## 📈 Example Prediction Output
+## 📈 Example Saved Output
 
-Sample output file:
+### **Classification Report (PNG)**
+
+Generated after training:
 
 ```
-unsw_predictions.csv
+report/training_report/classification_report.png
 ```
-
-Contains model predictions for testing dataset.
 
 ---
 

@@ -1,112 +1,99 @@
-Below is a **professional, clear, and complete README.md specifically for your `dashboard.py` (dashboard_unsw_full.py) Streamlit dashboard**.
-It explains the purpose, features, input/output workflow, configuration, and usage.
-
-Fully tailored to your code.
-
----
-
-# ✅ **README.md for `dashboard.py` (UNSW-NB15 Dashboard)**
-
 ````markdown
-# 🔐 UNSW-NB15 Full Analysis Dashboard  
-### Streamlit-based Real-Time Threat Analysis & Visualization
+# 🔐 CICIDS2018 Threat Detection Dashboard  
+### Streamlit-Based Real-Time Attack Classification & Visualization
 
-This dashboard provides a full interactive interface for analyzing, visualizing, and validating predictions from the UNSW-NB15 machine learning model.  
-It integrates classification, anomaly detection, ROC curves, confusion matrices, PDF reporting, and real-time visualization in one unified tool.
+This dashboard provides an interactive interface for loading datasets, preprocessing them, generating predictions using the CICIDS2018 trained model bundle, visualizing metrics, and exporting analytic reports.
+
+The application integrates classification, anomaly scoring, visualization panels, and dataset inspection — all in a unified web dashboard.
 
 ---
 
 ## 🚀 Features
 
-### ✔ Model-Based Predictions
-- Loads the trained model bundle (`unsw15_model_v1.joblib`)
-- Loads the feature scaler (`unsw15_scaler_v1.joblib`)
-- Supports:
-  - RandomForest prediction
-  - IsolationForest anomaly scoring
-  - Probability-based predictions (`predict_proba`)
-  - Auto-softmax fallback when `predict_proba` is unavailable
+### ✔ Model-Based Predictions (CICIDS2018)
+The dashboard automatically loads your saved training outputs:
+
+| File | Purpose |
+|------|---------|
+| `cicids2018_rf_model_A.joblib` | RandomForest classifier |
+| `cicids2018_scaler_A.joblib` | StandardScaler used during training |
+| `cicids2018_features_A.joblib` | List of numeric feature names |
+
+Supports:
+- `predict()`
+- `predict_proba()` (probabilities per label)
+- IsolationForest anomaly detection (from model bundle)
 
 ---
 
-### ✔ Interactive Visual Analytics
-The dashboard includes 5 fully interactive tabs:
+## 🎛 Dashboard Tabs
 
-1. **Overview**
-   - Dataset summary  
-   - Feature count  
-   - Class distribution visualization  
-   - Anomaly ratio  
+The UI includes multiple analytics tabs (depending on your implementation):
 
-2. **Confusion Matrix & Heatmap**
-   - Beautiful heatmap with annotations  
-   - Classification report table  
+### **1. Dataset Overview**
+- Uploaded dataset summary  
+- Preview first rows  
+- Missing value stats  
+- Number of features  
+- Detected label column  
+- Class distribution plot (if label exists)
 
-3. **ROC & Metrics**
-   - Multi-class ROC (One-vs-Rest)
-   - AUC values per class
-   - Precision/Recall/F1 Bar Charts  
+### **2. Classification & Confusion Matrix**
+- Predicted labels
+- Probability scores
+- Confusion matrix heatmap  
+- Classification report table  
+- Metrics (precision / recall / f1-score)
 
-4. **Anomaly & Timeline**
-   - IsolationForest anomaly score histogram  
-   - Attack timeline grouped by minute  
-   - Auto-generated synthetic timestamps if missing  
+### **3. Anomaly Detection**
+- IsolationForest anomaly scores  
+- Score histogram  
+- Outlier distribution  
 
-5. **Export / Report**
-   - Generates an automated PDF containing:
-     - Summary
-     - Confusion matrix
-     - ROC curves
-     - Precision/Recall graphs
-     - Anomaly histograms
-     - Timeline graphs  
+### **4. Timeline & Trends (If timestamp exists)**
+- Attack count per minute  
+- Synthetic timestamp generator if missing  
+- Line/bar charts of attack frequency  
+
+### **5. Export**
+- Export predictions as CSV  
+- Download confusion matrix / plots  
+- Generate PDF report (if implemented)
 
 ---
 
 ## 📥 Supported Input Formats
 
-The dashboard accepts:
+You can load:
 
-- `.csv` files  
-- `.parquet` files  
-- Dataset paths from local filesystem  
-- Uploaded files via Streamlit UI  
+- `.csv` datasets  
+- `.parquet` datasets  
+- File uploads via Streamlit  
+- Local dataset paths  
 
-If no timestamp exists, the dashboard offers to generate a **synthetic timestamp** for timeline charts.
-
----
-
-## 📂 File Requirements
-
-### **Required model files**
-
-| File | Purpose |
-|------|---------|
-| `unsw15_model_v1.joblib` | Contains RandomForest, IsolationForest, LabelEncoder & trained feature list |
-| `unsw15_scaler_v1.joblib` | StandardScaler used during training |
-
-These must match your `train.py` output.
+If dataset has no timestamp column, the dashboard can generate a **synthetic timeline** for visual charts.
 
 ---
 
-## ⚙ Configuration
+## 📂 Required Model Files
 
-The code uses the following editable defaults:
+Expected model bundle paths (default):
 
 ```python
-MODEL_PATH  = r"D:\RealTime_Alert_Analysis\report\training_report\unsw15_model_v1.joblib"
-SCALER_PATH = r"D:\RealTime_Alert_Analysis\report\training_report\unsw15_scaler_v1.joblib"
+MODEL_PATH  = r"D:\RealTime_Alert_Analysis\model\cicids2018_rf_model_A.joblib"
+SCALER_PATH = r"D:\RealTime_Alert_Analysis\model\cicids2018_scaler_A.joblib"
+FEATURES_PATH = r"D:\RealTime_Alert_Analysis\model\cicids2018_features_A.joblib"
 ````
 
-Both paths can be changed via **Streamlit sidebar**.
+These match the output of your `scripts/train.py`.
 
-### **Categorical columns**
+Model bundle contains:
 
-The dashboard must use the same categorical columns as training:
-
-```python
-CATEGORICAL_COLS = ["proto", "service", "state"]
-```
+* RandomForest model
+* IsolationForest model
+* StandardScaler
+* Feature list for alignment
+* Class label list
 
 ---
 
@@ -114,7 +101,7 @@ CATEGORICAL_COLS = ["proto", "service", "state"]
 
 ### **1. Load Model & Scaler**
 
-cached using:
+Cached using:
 
 ```python
 @st.cache_resource
@@ -122,55 +109,62 @@ cached using:
 
 ### **2. Load Dataset**
 
-Accepts:
+Supports:
 
-* uploaded file
-* or path from text input
+* Upload
+* File path
+* CSV or Parquet
 
-### **3. Normalize column names**
+### **3. Normalize Column Names**
 
-Lowercase, remove illegal characters, fix spacing, etc.
+Lowercasing
+Remove spaces
+Remove special characters
 
-### **4. Detect and remove label column**
+### **4. Detect Label Column**
 
 Supports:
 
+* `label`
+* `attack_type`
+* `flowlabel`
+* `attack_cat`
+* “label-like” columns
+
+### **5. Extract Feature Columns**
+
+Using:
+
 ```
-label, attack_cat, attack_type, attack
+cicids2018_features_A.joblib
 ```
 
-### **5. One-hot encode categorical features**
+Dashboard:
 
-* Uses `pd.get_dummies()`
-* Aligns to training feature list
-* Adds missing columns (default = 0)
-* Removes extra columns
+* Aligns user dataset to training features
+* Drops extra columns
+* Adds missing columns (filled with 0)
 
-### **6. Ensure numerical format**
+### **6. Scaling & Prediction**
 
-Converts all values to numbers and fills missing values.
+* StandardScaler → `transform()`
+* RandomForest → predicted labels
+* Probability vector via `predict_proba()`
+* IsolationForest anomaly score
 
-### **7. Scale & Predict**
-
-* Scaler → `transform()`
-* RandomForest → `predict()` + `predict_proba()`
-* IsolationForest → `predict()` + `decision_function()`
-
-### **8. Generate results DataFrame**
+### **7. Generate Final Result DataFrame**
 
 Includes:
 
-* predicted label
-* anomaly score
-* true label (if available)
-* timestamp (real or synthetic)
+* Predicted labels
+* Probabilities
+* Anomaly scores
+* Timestamp (real or synthetic)
+* Input features
 
-### **9. Display analytics & plots**
+### **8. Visualize & Export**
 
-### **10. Export:
-
-* CSV predictions
-* PDF report (multi-page)**
+Charts & metrics available under multiple tabs.
 
 ---
 
@@ -188,25 +182,30 @@ pip install -r requirements.txt
 streamlit run scripts/dashboard.py
 ```
 
-Your browser will open automatically.
+This launches the UI at:
+
+```
+http://localhost:8501
+```
 
 ---
 
 ## 📊 Output Files
 
-| File                   | Description                                        |
-| ---------------------- | -------------------------------------------------- |
-| `unsw_predictions.csv` | Model + anomaly predictions for the loaded dataset |
-| `unsw_report.pdf`      | Auto-generated multi-page analysis report          |
+| File                        | Description                                    |
+| --------------------------- | ---------------------------------------------- |
+| `predictions.csv`           | Output predictions with anomaly scores         |
+| `classification_report.png` | Training report stored in repo/training_report |
+| `plots/*.png` (optional)    | Exported visualizations                        |
+| `report.pdf` (optional)     | Multi-page analytics PDF                       |
 
 ---
 
-## 📦 Notes
+## 📌 Notes
 
-* The dashboard gracefully handles missing labels (ROC & confusion matrix disabled).
-* Missing timestamps are auto-generated for timeline charts.
-* The input dataset will be normalized and aligned to training features.
-* Compatible with any UNSW-NB15–based dataset trained using the same script.
+* The dashboard automatically standardizes user data to match training features.
+* If the dataset contains no labels, evaluation tabs are disabled.
+* If timestamps are missing, synthetic timestamps are generated only for visualization.
+* Works exclusively with CICIDS2018-trained models produced by your `train.py`.
 
 ---
-
