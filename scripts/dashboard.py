@@ -13,18 +13,18 @@ from sklearn.preprocessing import label_binarize
 
 st.set_page_config(page_title="CICIDS-2018 Chunked Dashboard", layout="wide")
 
-# --------------------
+ 
 # CONFIG - edit if needed
-# --------------------
+ 
 MODEL_PATH = r"D:\RealTime_Alert_Analysis\model\cicids2018_rf_model_A.joblib"
 SCALER_PATH = r"D:\RealTime_Alert_Analysis\model\cicids2018_scaler_A.joblib"
 
 DEFAULT_CHUNK_SIZE = 40000  # rows per chunk (tune to your RAM)
-# --------------------
+ 
 
-# --------------------
+ 
 # Helper utilities
-# --------------------
+ 
 def normalize_columns(df):
     df = df.copy()
     df.columns = (
@@ -98,9 +98,9 @@ def plot_roc_multiclass(y_true, y_score, classes):
     plt.tight_layout()
     return fig, aucs
 
-# --------------------
+ 
 # Load model & scaler
-# --------------------
+ 
 @st.cache_resource
 def load_bundle(mpath, spath):
     bundle = joblib.load(mpath)
@@ -122,9 +122,9 @@ except Exception as e:
     st.sidebar.error(f"Failed to load model/scaler: {e}")
     st.stop()
 
-# --------------------
+ 
 # Inputs
-# --------------------
+ 
 st.title("CICIDS-2018 Chunked Dashboard (ROC / Confusion / Timeline / PDF)")
 
 st.markdown("**Select dataset** (local path recommended for very large CSVs). If uploading through the browser, large files may load into RAM.")
@@ -150,9 +150,9 @@ else:
     st.error("Provide a file (upload) or local path.")
     st.stop()
 
-# --------------------
+ 
 # Chunked processing
-# --------------------
+ 
 status = st.empty()
 progress = st.progress(0)
 pbar_text = st.empty()
@@ -359,9 +359,9 @@ if "true_label" in out_df.columns:
 st.write("### Prediction distribution")
 st.dataframe(out_df["prediction"].value_counts().rename_axis("label").reset_index(name="count"))
 
-# --------------------
+ 
 # Confusion matrix & classification report
-# --------------------
+ 
 if "true_label" in out_df.columns:
     st.header("Confusion matrix & classification report")
     classes = sorted(list(pd.unique(pd.concat([out_df["true_label"], out_df["prediction"]]).astype(str))))
@@ -381,9 +381,9 @@ if "true_label" in out_df.columns:
 else:
     st.info("No true labels found in dataset -> confusion and classification report cannot be computed.")
 
-# --------------------
+ 
 # ROC curves
-# --------------------
+ 
 st.header("ROC Curves (One-vs-Rest)")
 if ("true_label" in out_df.columns) and (prob_matrix is not None):
     classes = sorted(list(pd.unique(pd.concat([out_df["true_label"], out_df["prediction"]]).astype(str))))
@@ -399,9 +399,9 @@ if ("true_label" in out_df.columns) and (prob_matrix is not None):
 else:
     st.info("ROC requires ground truth labels AND classifier probability scores (predict_proba).")
 
-# --------------------
+ 
 # Anomaly histogram & timeline
-# --------------------
+ 
 st.header("Anomaly score distribution & Attack timeline")
 fig_iso, ax_iso = plt.subplots(figsize=(8,4))
 ax_iso.hist(out_df["iso_score"], bins=80)
@@ -422,9 +422,9 @@ if "timestamp" in out_df.columns:
 else:
     st.info("No timestamp column detected -> timeline unavailable.")
 
-# --------------------
+ 
 # Export PDF report
-# --------------------
+ 
 st.header("Export PDF report")
 if st.button("Generate PDF report"):
     buf = io.BytesIO()
@@ -493,9 +493,9 @@ if st.button("Generate PDF report"):
     st.success("PDF report ready.")
     st.download_button("Download PDF report", data=buf, file_name="cicids_report.pdf", mime="application/pdf")
 
-# --------------------
+ 
 # Save predictions CSV
-# --------------------
+ 
 save_path = os.path.join(os.getcwd(), "cicids_chunked_predictions.csv")
 out_df.to_csv(save_path, index=False)
 st.success(f"Predictions CSV saved: {save_path}")
