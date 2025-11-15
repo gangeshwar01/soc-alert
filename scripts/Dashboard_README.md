@@ -1,107 +1,154 @@
-````markdown
-# 🔐 CICIDS2018 Threat Detection Dashboard  
-### Streamlit-Based Real-Time Attack Classification & Visualization
+# 🔐 **CICIDS2018 Threat Detection Dashboard**
 
-This dashboard provides an interactive interface for loading datasets, preprocessing them, generating predictions using the CICIDS2018 trained model bundle, visualizing metrics, and exporting analytic reports.
+### Streamlit-Based Real-Time Attack Classification, Anomaly Detection & Risk Scoring
 
-The application integrates classification, anomaly scoring, visualization panels, and dataset inspection — all in a unified web dashboard.
+This dashboard provides an interactive interface for loading large CICIDS2018 datasets in **chunked mode**, preprocessing them efficiently, running predictions using the trained model bundle, computing **risk levels**, generating **enhanced CSV outputs**, and exporting a **multi-page PDF report** with detailed analytics.
+
+It integrates prediction, anomaly scoring, risk evaluation, visualization, and report generation — all in a unified Streamlit interface.
 
 ---
 
-## 🚀 Features
+## 🚀 **Features**
 
 ### ✔ Model-Based Predictions (CICIDS2018)
-The dashboard automatically loads your saved training outputs:
 
-| File | Purpose |
-|------|---------|
-| `cicids2018_rf_model_A.joblib` | RandomForest classifier |
-| `cicids2018_scaler_A.joblib` | StandardScaler used during training |
-| `cicids2018_features_A.joblib` | List of numeric feature names |
+Automatically loads your trained model components:
+
+| File                           | Purpose                                        |
+| ------------------------------ | ---------------------------------------------- |
+| `cicids2018_rf_model_A.joblib` | RandomForest classifier                        |
+| `cicids2018_scaler_A.joblib`   | StandardScaler used during training            |
+| `cicids2018_features_A.joblib` | Full list of numeric features used in training |
 
 Supports:
-- `predict()`
-- `predict_proba()` (probabilities per label)
-- IsolationForest anomaly detection (from model bundle)
+
+* `predict()` – class prediction
+* `predict_proba()` – probability scores
+* **IsolationForest anomaly detection**
+* **Risk Level Classification (LOW / MEDIUM / HIGH)**
+
+Risk level is computed using:
+
+* Prediction label (attack vs benign)
+* IsolationForest anomaly score
 
 ---
 
-## 🎛 Dashboard Tabs
-
-The UI includes multiple analytics tabs (depending on your implementation):
+## 🎛 **Dashboard Features & Analytics Panels**
 
 ### **1. Dataset Overview**
-- Uploaded dataset summary  
-- Preview first rows  
-- Missing value stats  
-- Number of features  
-- Detected label column  
-- Class distribution plot (if label exists)
+
+* Load CSV or local file path
+* Streaming chunk processing (RAM-efficient)
+* Displays first rows, feature count, missing value summary
+* Automatic label/timestamp detection
+* Class distribution (if labels exist)
+
+---
 
 ### **2. Classification & Confusion Matrix**
-- Predicted labels
-- Probability scores
-- Confusion matrix heatmap  
-- Classification report table  
-- Metrics (precision / recall / f1-score)
+
+* Predictions for each row
+* Probability scores (if available)
+* Confusion matrix heatmap
+* Classification report table
+* Precision / recall / F1 visualization
+
+---
 
 ### **3. Anomaly Detection**
-- IsolationForest anomaly scores  
-- Score histogram  
-- Outlier distribution  
+
+* IsolationForest anomaly score per row
+* Anomaly score histogram
+* Outlier detection stats
+
+---
 
 ### **4. Timeline & Trends (If timestamp exists)**
-- Attack count per minute  
-- Synthetic timestamp generator if missing  
-- Line/bar charts of attack frequency  
 
-### **5. Export**
-- Export predictions as CSV  
-- Download confusion matrix / plots  
-- Generate PDF report (if implemented)
+* Group attacks per minute
+* Auto-generates synthetic timestamps if missing
+* Line chart of attack frequency over time
 
 ---
 
-## 📥 Supported Input Formats
+### **5. Risk-Level Analysis (NEW)**
 
-You can load:
-
-- `.csv` datasets  
-- `.parquet` datasets  
-- File uploads via Streamlit  
-- Local dataset paths  
-
-If dataset has no timestamp column, the dashboard can generate a **synthetic timeline** for visual charts.
+* Automatic **LOW / MEDIUM / HIGH** classification
+* Risk level summary
+* Risk distribution bar chart
+* Included in CSV output
+* Included in PDF report
 
 ---
 
-## 📂 Required Model Files
+### **6. Export**
 
-Expected model bundle paths (default):
+* **Enhanced Predictions CSV**
+  Includes:
+
+  ```
+  prediction, iso_score, risk_level, true_label, timestamp
+  ```
+
+* **Multi-Page PDF Report (NEW)**
+  Contains:
+
+  * Overall summary
+  * Risk summary + bar chart
+  * Confusion matrix
+  * Classification report
+  * ROC curves
+  * Precision/recall bars
+  * Anomaly score histogram
+  * Timeline chart (if timestamp exists)
+
+---
+
+## 📥 **Supported Input Formats**
+
+The dashboard accepts:
+
+* `.csv` (recommended)
+* File upload or local path
+* Large datasets processed in **streaming chunks**
+* Auto-handles missing or mixed numeric formats
+
+If timestamp is missing → synthetic timestamps can be auto-created.
+
+---
+
+## 📂 **Required Model Files**
+
+Defaults:
 
 ```python
 MODEL_PATH  = r"D:\RealTime_Alert_Analysis\model\cicids2018_rf_model_A.joblib"
 SCALER_PATH = r"D:\RealTime_Alert_Analysis\model\cicids2018_scaler_A.joblib"
 FEATURES_PATH = r"D:\RealTime_Alert_Analysis\model\cicids2018_features_A.joblib"
-````
+```
 
-These match the output of your `scripts/train.py`.
+These correspond to output generated by:
 
-Model bundle contains:
+```
+scripts/train.py
+```
 
-* RandomForest model
-* IsolationForest model
+The model bundle includes:
+
+* RandomForest classifier
+* IsolationForest anomaly model
 * StandardScaler
-* Feature list for alignment
+* Feature alignment list
 * Class label list
 
 ---
 
-## 🧠 How It Works (Pipeline Summary)
+## 🧠 **How It Works (Internal Pipeline Summary)**
 
 ### **1. Load Model & Scaler**
 
-Cached using:
+Cached with:
 
 ```python
 @st.cache_resource
@@ -109,80 +156,64 @@ Cached using:
 
 ### **2. Load Dataset**
 
-Supports:
-
-* Upload
-* File path
-* CSV or Parquet
+* Reading in chunks (default 40,000 rows)
+* Streaming prevents memory overflow
 
 ### **3. Normalize Column Names**
 
-Lowercasing
-Remove spaces
-Remove special characters
+Lowercase, strip symbols, unify naming.
 
-### **4. Detect Label Column**
+### **4. Detect Columns**
 
-Supports:
+* Identify label column automatically
+* Identify timestamp column if present
 
-* `label`
-* `attack_type`
-* `flowlabel`
-* `attack_cat`
-* “label-like” columns
+### **5. Feature Extraction**
 
-### **5. Extract Feature Columns**
+* Aligns input columns to training features
+* Fills missing ones with zeros
+* Drops unseen/unnecessary columns
 
-Using:
+### **6. Preprocessing & Prediction**
 
-```
-cicids2018_features_A.joblib
-```
+* Apply StandardScaler
+* RandomForest → predictions
+* IsolationForest → anomaly scores
+* Risk function computes **LOW/MEDIUM/HIGH**
 
-Dashboard:
-
-* Aligns user dataset to training features
-* Drops extra columns
-* Adds missing columns (filled with 0)
-
-### **6. Scaling & Prediction**
-
-* StandardScaler → `transform()`
-* RandomForest → predicted labels
-* Probability vector via `predict_proba()`
-* IsolationForest anomaly score
-
-### **7. Generate Final Result DataFrame**
+### **7. Build Final DataFrame**
 
 Includes:
 
-* Predicted labels
-* Probabilities
-* Anomaly scores
-* Timestamp (real or synthetic)
-* Input features
+```
+prediction
+iso_score
+risk_level
+true_label (optional)
+timestamp (optional)
+```
 
-### **8. Visualize & Export**
+### **8. Visualizations**
 
-Charts & metrics available under multiple tabs.
+Confusion matrix, ROC, PR charts, histograms, risk overview, timeline.
 
 ---
 
-## ▶ Running the Dashboard
+## ▶ **Running the Dashboard**
 
-### **1. Install dependencies**
+### 1. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### **2. Run Streamlit**
+### 2. Run Streamlit
 
 ```bash
 streamlit run scripts/dashboard.py
 ```
 
-This launches the UI at:
+Dashboard opens at:
 
 ```
 http://localhost:8501
@@ -190,22 +221,22 @@ http://localhost:8501
 
 ---
 
-## 📊 Output Files
+## 📊 **Output Files**
 
-| File                        | Description                                    |
-| --------------------------- | ---------------------------------------------- |
-| `predictions.csv`           | Output predictions with anomaly scores         |
-| `classification_report.png` | Training report stored in repo/training_report |
-| `plots/*.png` (optional)    | Exported visualizations                        |
-| `report.pdf` (optional)     | Multi-page analytics PDF                       |
+| File                                       | Description                              |
+| ------------------------------------------ | ---------------------------------------- |
+| `cicids_chunked_predictions_with_risk.csv` | Predictions + risk level + anomaly score |
+| `classification_report.png`                | Training PNG report from training script |
+| `plots/*.png` (optional)                   | Exported visualizations                  |
+| `cicids_risk_report.pdf` (NEW)             | Multi-page PDF including risk summary    |
 
 ---
 
 ## 📌 Notes
 
-* The dashboard automatically standardizes user data to match training features.
-* If the dataset contains no labels, evaluation tabs are disabled.
-* If timestamps are missing, synthetic timestamps are generated only for visualization.
-* Works exclusively with CICIDS2018-trained models produced by your `train.py`.
+* Dashboard standardizes incoming data automatically.
+* If true labels are missing → confusion matrix & ROC are disabled.
+* Timestamp missing → synthetic timestamps generated for timeline only.
+* Works exclusively with **CICIDS2018 models trained via `train.py`**.
+* Designed for **large datasets** (streaming in chunks for RAM efficiency).
 
----

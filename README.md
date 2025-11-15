@@ -2,7 +2,7 @@
 # 🔥 RealTime Alert Analysis (CICIDS2018)
 
 A complete machine learning pipeline for **real-time intrusion detection** using the **CICIDS2018 dataset**.  
-This project supports RAM-efficient training, preprocessing, model generation, anomaly detection, evaluation reports (PNG), and a Streamlit-based dashboard for real-time security alert analysis.
+This project supports RAM-efficient model training, feature preprocessing, attack classification, anomaly detection, **risk-level scoring**, CSV export, and multi-page **PDF report generation**, along with a full Streamlit dashboard for real-time analysis.
 
 ---
 
@@ -16,25 +16,25 @@ REALTIME_ALERT_ANALYSIS/
 │   └── 02-16-2018.csv                    # CICIDS2018 part file(s)
 │
 ├── model/
-│   ├── cicids2018_features_A.joblib      # Saved feature list
+│   ├── cicids2018_features_A.joblib      # Saved training feature list
 │   ├── cicids2018_rf_model_A.joblib      # Trained RandomForest model
-│   └── cicids2018_scaler_A.joblib        # Scaler used during training
+│   └── cicids2018_scaler_A.joblib        # StandardScaler used during training
 │
 ├── notebook/
-│   └── train.ipynb                       # Exploratory training/testing notebook
+│   └── train.ipynb                       # Exploratory notebook for training/testing
 │
 ├── report/
 │   ├── test_report/
-│   │   └── unsw_report.pdf               # Example reference report
+│   │   └── unsw_report.pdf               # Reference example report
 │   │
 │   └── training_report/
 │       └── classification_report.png     # Auto-generated classification report
 │
 ├── scripts/
-│   ├── dashboard.py                      # Streamlit dashboard for live predictions
-│   └── train.py                          # RAM-efficient training script (CICIDS2018)
+│   ├── dashboard.py                      # Streamlit dashboard with risk scoring & PDF
+│   └── train.py                          # RAM-efficient model trainer (CICIDS2018)
 │
-├── venv/                                 # Virtual environment
+├── venv/                                 # Virtual environment (local)
 │
 ├── requirements.txt
 ├── .gitattributes
@@ -49,47 +49,97 @@ REALTIME_ALERT_ANALYSIS/
 ## 🚀 Features
 
 ### **✔ RAM-Efficient ML Training**
-Your training script (`scripts/train.py`) includes:
+The training pipeline (`scripts/train.py`) provides:
 
-- Stream-based CSV loading (chunked processing)
-- Automatic numeric column detection
-- Automatic label column detection
-- Balanced dataset sampling per class
-- Scaling → RandomForest training
-- Isolation Forest anomaly detector
+- Chunked CSV loading (streaming input)
+- Automatic label & numeric feature detection
+- Balanced sampling of classes
+- StandardScaler preprocessing
+- RandomForest classification
+- IsolationForest anomaly scoring
 - Model bundle saved using `joblib`
-- Classification report saved as **PNG**
+- Classification report auto-generated as **PNG**
 
-### **✔ Auto-Generated Image Reports**
-Training automatically produces:
+---
 
-- `classification_report.png`  
-  Stored under:  
+## ✔ Auto-Generated Reports
+
+### **Training**
+During training, the following report is created:
+
 ```
 
 report/training_report/classification_report.png
 
+```
+
+### **Dashboard (NEW)**
+
+Using the Streamlit dashboard, the following files are produced:
+
+| File                                              | Description                                          |
+|--------------------------------------------------|------------------------------------------------------|
+| `cicids_chunked_predictions_with_risk.csv`       | Predictions + anomaly scores + **risk levels**       |
+| `cicids_risk_report.pdf`                         | Multi-page analysis report with risk summary         |
+| `plots/*.png`                                    | Exported charts (optional)                           |
+
+---
+
+## 🎛 Streamlit Dashboard Capabilities
+
+The dashboard (`scripts/dashboard.py`) now supports:
+
+### ✔ Real-Time Prediction
+- Processes huge CSV files in **chunks**
+- Predicts attack labels using RandomForest
+- Computes IsolationForest anomaly score
+
+### ✔ **Risk Level Classification (NEW)**
+Automatically assigns:
+
+- **LOW risk**
+- **MEDIUM risk**
+- **HIGH risk**
+
+Based on:
+- Attack prediction label  
+- IsolationForest anomaly score thresholds  
+
+Included in:
+- UI  
+- CSV export  
+- PDF summary  
+
+### ✔ Enhanced Visual Analytics
+Includes:
+
+- Confusion matrix heatmap
+- Classification report table
+- ROC curves (one-vs-rest)
+- Precision/Recall bar charts
+- Anomaly score histograms
+- Attack timeline plots (if timestamp exists)
+
+### ✔ Multi-Page PDF Report (NEW)
+Generated PDF includes:
+
+- Summary statistics  
+- Risk level summary + bar chart  
+- Confusion matrix  
+- Classification report  
+- ROC curves  
+- PR bar charts  
+- Anomaly histogram  
+- Timeline graph (if timestamp exists)  
+
+### ✔ CSV Export (NEW)
+Exports:
+
+```
+
+prediction, iso_score, risk_level, true_label, timestamp
+
 ````
-
-### **✔ Streamlit Dashboard**
-The dashboard (`scripts/dashboard.py`) provides:
-
-- Real-time intrusion prediction
-- Probability/Risk scores
-- Feature visualizations
-- JSON / Manual input support
-
-### **✔ Model Bundle Files**
-Saved inside `model/`:
-
-- `cicids2018_rf_model_A.joblib`
-- `cicids2018_scaler_A.joblib`
-- `cicids2018_features_A.joblib`
-
-### **✔ Clean Project & Reproducibility**
-- Git LFS ready for `.joblib` files  
-- Reproducible experiments  
-- Organized folder structure  
 
 ---
 
@@ -99,11 +149,11 @@ Saved inside `model/`:
 |----------------|------------|
 | ML Training    | Python, Scikit-Learn |
 | Feature Scaling | StandardScaler |
-| Dashboard      | Streamlit |
-| Plotting       | Matplotlib |
+| Visualization  | Matplotlib |
+| Dashboard UI   | Streamlit |
 | Data Handling  | Pandas, NumPy |
 | File Storage   | Git LFS |
-| Environment    | venv |
+| Reporting      | PDF (Matplotlib + PdfPages) |
 
 ---
 
@@ -129,7 +179,7 @@ source venv/bin/activate     # Linux/Mac
 pip install -r requirements.txt
 ```
 
-### **4. Install Git LFS (Required for .joblib Models)**
+### **4. Install Git LFS (Required for Models)**
 
 ```bash
 git lfs install
@@ -140,22 +190,21 @@ git lfs pull
 
 ## 🧠 Training the Model
 
-Run training:
+Run:
 
 ```bash
 python scripts/train.py
 ```
 
-This script will:
+This will:
 
-✔ Load CICIDS2018 CSVs
-✔ Stream & balance data
-✔ Train RandomForest
-✔ Train Isolation Forest
-✔ Save model bundle
-✔ Generate PNG classification report
+* Load CICIDS2018 CSVs
+* Stream using RAM-efficient chunks
+* Train RandomForest + IsolationForest
+* Save model + scaler + feature list
+* Generate classification_report.png
 
-All saved output is stored here:
+Saved outputs:
 
 ```
 model/
@@ -166,34 +215,57 @@ report/training_report/
 
 ## ▶️ Run the Streamlit Dashboard
 
+Start dashboard:
+
 ```bash
 streamlit run scripts/dashboard.py
 ```
 
-Open the URL displayed in your terminal, typically:
+Server opens at:
 
 ```
 http://localhost:8501
 ```
 
-The dashboard provides:
+Dashboard provides:
 
-* Real-time attack classification
-* Interactive UI
-* Probability visualizations
-* JSON/Row-level input
+* Real-time threat classification
+* Probability + anomaly + **risk scoring**
+* Visualization panels
+* PDF export
+* Chunk-safe processing
 
 ---
 
-## 📈 Example Saved Output
+## 📈 Example Output Files
 
-### **Classification Report (PNG)**
-
-Generated after training:
+### **Training Report (PNG)**
 
 ```
 report/training_report/classification_report.png
 ```
+
+### **Enhanced Predictions CSV**
+
+```
+cicids_chunked_predictions_with_risk.csv
+```
+
+### **PDF Analytics Report**
+
+```
+cicids_risk_report.pdf
+```
+
+---
+
+## ⭐ Notes
+
+* Dashboard auto-aligns incoming data with training features.
+* If true labels missing → ROC/Confusion disabled.
+* Synthetic timestamps created only for visualization.
+* Designed for **large datasets** using chunk streaming.
+* All risk scoring logic is transparent and adjustable.
 
 ---
 
